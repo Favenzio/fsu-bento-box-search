@@ -44,7 +44,17 @@ function _bento_box_search_installed_fields() {
       'field_name' => 'search_source_url',
       'label' => $t('Search URL for the source you wish to query'),
       'type' => 'text',
-    ),  
+    ),
+    'results_container' => array (
+      'field_name' => 'results_container',
+      'label' => $t('The ID or CLASS for the container that surrounds the results'),
+      'type' => 'text',
+    ),
+      'single_result' => array (
+      'field_name' => 'single_result',
+      'label' => $t('The ID or CLASS for a single result'),
+      'type' => 'text',
+    ),
   );
 }
 
@@ -67,7 +77,35 @@ function _bento_box_search_installed_instances() {
           'type' => 'text'
         )
       )
-    )
+    ),
+    'results_container' => array(
+      'field_name' => 'results_container',
+      'type' => 'text',
+      'label' => $t('The ID or CLASS for the container that surrounds the results'),
+      'widget'=> array(
+        'type' => 'text_textfield'
+      ),
+      'display' => array(
+        'bento_box_results_container' => array(
+          'label' => $t('The ID or CLASS for the container that surrounds the results'),
+          'type' => 'text'
+        )
+      )
+    ),
+    'single_result' => array(
+      'field_name' => 'single_result',
+      'type' => 'text',
+      'label' => $t('The ID or CLASS for a single result'),
+      'widget'=> array(
+        'type' => 'text_textfield'
+      ),
+      'display' => array(
+        'bento_box_single_result' => array(
+          'label' => $t('The ID or CLASS for a single result'),
+          'type' => 'text'
+        )
+      )
+    ),   
   );
 }
 
