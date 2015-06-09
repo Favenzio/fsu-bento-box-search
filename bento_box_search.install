@@ -1,0 +1,99 @@
+<?php
+
+/**
+ * @file
+ * Functions to be run during module install/uninstall process for Bento Box Search
+ *
+ */
+
+/**
+ * Implements hook_install().
+ */
+function bento_box_search_install() {
+  node_types_rebuild();
+  $types = node_type_get_types();
+  node_add_body_field($types['search_source']);
+  add_custom_fields();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function bento_box_search_uninstall() {
+  $customnewtype = 'search_source';
+  $sql = 'SELECT nid FROM {node} n WHERE n.type = :type';
+  $result = db_query($sql, array(':type' => $customnewtype));
+  $nodeids = array();
+  foreach ($result as $row) {
+    $nodeids[] = $row->nid;
+  }
+  
+  node_delete_multiple($nodeids);
+  delete_custom_fields();
+  node_type_delete($customnewtype);
+  field_purge_batch(500);
+}
+
+/**
+ * Sets custom field settings for the Search Source Content type
+ */
+function _bento_box_search_installed_fields() {
+  $t = get_t();
+  return array(
+    'search_source_url' => array (
+      'field_name' => 'search_source_url',
+      'label' => $t('Search URL for the source you wish to query'),
+      'type' => 'text',
+    ),  
+  );
+}
+
+/**
+ * Sets custom field instance settings for the Search Source content type
+ */
+function _bento_box_search_installed_instances() {
+  $t = get_t();
+  return array(
+    'search_source_url' => array(
+      'field_name' => 'search_source_url',
+      'type' => 'text',
+      'label' => $t('Search URL for the source you wish to query'),
+      'widget'=> array(
+        'type' => 'text_textfield'
+      ),
+      'display' => array(
+        'bento_box_search_field' => array(
+          'label' => $t('Search URL for the source you wish to query'),
+          'type' => 'text'
+        )
+      )
+    )
+  );
+}
+
+/**
+ * Creates the new custom fields and custom field instances for the Search Source content type
+ */
+function add_custom_fields() {
+  foreach (_bento_box_search_installed_fields() as $field) {
+    field_create_field($field);
+  }
+  foreach (_bento_box_search_installed_instances() as $fieldinstance) {
+    $fieldinstance['entity_type'] = 'node';
+    $fieldinstance['bundle'] = 'search_source';
+    field_create_instance($fieldinstance);
+  }
+}
+
+/**
+ * Deletes custom fields created during the install process
+ */
+function delete_custom_fields() {
+  foreach (array_keys(_bento_box_search_installed_fields()) as $field) {
+    field_delete_field($field);
+  }
+  $instances = field_info_instances('node', 'search_source');
+  foreach ($instances as $instance_name => $fieldinstance) {
+    field_delete_instance($fieldinstance);
+  }
+}

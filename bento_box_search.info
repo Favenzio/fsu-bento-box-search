@@ -1,0 +1,6 @@
+name = Bento Box Search
+description = A module that allows various systems to be queried, displaying the results on the same page using a Bento Box style.
+core = 7.x
+package = Search
+files[] = bento_box_search.module
+stylesheets[all][] = css/bento-box-search.css

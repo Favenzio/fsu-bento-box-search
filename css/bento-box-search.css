@@ -1,0 +1,4 @@
+/* Bento Box Search Cascading Style Sheet */
+
+.form-item-bento-search-input, #edit-bento-submit { display: inline-block; }
+#edit-bento-search-input { width: 150px; display: inline-block; }

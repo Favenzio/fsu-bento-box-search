@@ -1,0 +1,106 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for Bento Box Search Module
+ *
+ * This module creates a search block allowing users to search multiple systems.
+ * It also creates a custom content type that stores information aobut the systems
+ * to be queried.
+ * 
+ * The results page queries each system enabled using an ajax request, 
+ * displaying the top results as they are received in their own box using html divs.
+ */
+
+/**
+ * Implements hook_block_info(). It lets Drupal know what blocks we want to create.
+ */
+function bento_box_search_block_info() {
+  $blocks = array();
+  $blocks['bento_box_search_block'] = array(
+    'info' => t('A search box with options for systems to be searched'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+     
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view(). It returns the content for the blocks we created using
+ * hook_block_info().
+ */
+function bento_box_search_block_view($block_name = '') {
+  // Check which block is being requested
+  if ($block_name == 'bento_box_search_block') {
+    
+    $block = array(
+      'content' => theme('bento_box_search_form'), //use hook_theme provided below.
+    );
+    
+    return $block;
+  }
+}
+
+/**
+ * Implements hook_theme(). 
+ */
+function bento_box_search_theme() {
+  return array(
+    'bento_box_search_form' => array(
+      'template' => 'bento-box-search-block', //see bento-box-search-block.tpl.php
+    ),
+  );
+}
+
+/**
+ * Preprocess variables to be passed to the template assigned above in hook_theme().
+ */
+function template_preprocess_bento_box_search_form(&$variables) {
+  $search_box = drupal_render (drupal_get_form('bento_search_form'));
+  $variables['search_box'] = $search_box;
+}
+
+/**
+ * Implements hook_form() for Bento Box Search Box in block.
+ */
+function bento_search_form($form, &$form_state) {
+  $form['bento_search_input'] = array(
+    '#type' => 'textfield',
+    '#required' => TRUE,
+  );
+  
+  $form['bento_submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Search'),
+  );
+  
+  return $form;
+}
+
+/**
+ * Done with code related to search block. Now we deal with the Content Type
+ * we create on install for the systems we want to search.
+ */
+
+
+/**
+ * Implements hook_node_info(). Provides detail for new Content Type.
+ */
+function bento_box_search_node_info() {
+  return array (
+    'search_source' => array(
+      'name' => t('Search Source'),
+      'base' => 'search_source',
+      'description' => t('Systems to be queried by Bento Box Search'),
+      'has_title' => TRUE,
+      'title_label' => t('Search Source Name'),
+    )
+  );
+}
+
+/**
+ * Implements hook_form() for custom content type.
+ */
+function search_source_form($node, $form_state) {
+  return node_content_form($node, $form_state);
+}
