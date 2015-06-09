@@ -34,7 +34,7 @@ function bento_box_search_block_view($block_name = '') {
   if ($block_name == 'bento_box_search_block') {
     
     $block = array(
-      'content' => theme('bento_box_search_form'), //use hook_theme provided below.
+      'content' => theme('bento_box_search_form'), //use hook_theme provided by this module.
     );
     
     return $block;
@@ -47,17 +47,29 @@ function bento_box_search_block_view($block_name = '') {
 function bento_box_search_theme() {
   return array(
     'bento_box_search_form' => array(
+      'path' => drupal_get_path('module', 'bento_box_search').'/theme',
       'template' => 'bento-box-search-block', //see bento-box-search-block.tpl.php
+    ),
+    'bento_box_search_results' => array(
+      'path' => drupal_get_path('module', 'bento_box_search').'/theme',
+      'template' => 'bento-box-search-results-page', //see bento-box-search-results-page.tpl.php
     ),
   );
 }
 
 /**
- * Preprocess variables to be passed to the template assigned above in hook_theme().
+ * Preprocess variables to be passed to the search block template assigned above in hook_theme().
  */
 function template_preprocess_bento_box_search_form(&$variables) {
   $search_box = drupal_render (drupal_get_form('bento_search_form'));
   $variables['search_box'] = $search_box;
+}
+
+/**
+ * Preprocess variables to be passed to the results page template assigned above in hook_theme().
+ */
+function template_preprocess_bento_box_search_results(&$variables) {
+  $variables['search_input'] = $_SESSION['bento_search']['search_input'];
 }
 
 /**
@@ -75,6 +87,36 @@ function bento_search_form($form, &$form_state) {
   );
   
   return $form;
+}
+
+/**
+ * Implements hook_form_submit(). Tells Drupal what to do once the search
+ * keywords have been successfully submitted.
+ */
+function bento_search_form_submit($form, &$form_state) {
+  $_SESSION['bento_search']['search_input'] = $form_state['values']['bento_search_input'];
+  $form_state['redirect'] = 'bento_search_results/' . $form_state['values']['bento_search_input'];
+}
+
+/**
+ * Implements hook_menu(). Creates the path for the results page.
+ */
+function bento_box_search_menu() {
+  $menu['bento_search_results'] = array (
+    'title' => 'Search Results',
+    'page callback' => 'bento_search_results_page',
+    'access callback' => TRUE,
+  );
+  
+  return $menu;
+}
+
+/**
+ * Callback function for search results page.
+ */
+function bento_search_results_page() {
+  $content = theme('bento_box_search_results');
+  return $content;
 }
 
 /**
