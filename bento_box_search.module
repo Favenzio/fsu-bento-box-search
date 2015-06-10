@@ -69,11 +69,14 @@ function template_preprocess_bento_box_search_form(&$variables) {
  * Preprocess variables to be passed to the results page template assigned above in hook_theme().
  */
 function template_preprocess_bento_box_search_results(&$variables) {
+  drupal_add_js(drupal_get_path('module', 'bento_box_search') . '/js/bento_box_search.js');
   $variables['search_input'] = $_SESSION['bento_search']['search_input'];
   $result = _search_source_list();
   
   foreach ($result as $search_source) {
     $variables['search_sources'][] = $search_source;
+    drupal_add_js(array('bento_box_search' => 
+      array($search_source->nid => $search_source->nid)), 'setting');
   }
 }
 
@@ -104,12 +107,19 @@ function bento_search_form_submit($form, &$form_state) {
 }
 
 /**
- * Implements hook_menu(). Creates the path for the results page.
+ * Implements hook_menu(). Creates the path for the results page and
+ * the individual query results for each system.
  */
 function bento_box_search_menu() {
   $menu['bento_search_results'] = array (
     'title' => 'Search Results',
     'page callback' => 'bento_search_results_page',
+    'access callback' => TRUE,
+  );
+  
+  $menu['bento_search_query/%/%'] = array (
+    'page callback' => 'bento_search_query_result',
+    'page arguments' => array(1,2),
     'access callback' => TRUE,
   );
   
@@ -122,6 +132,15 @@ function bento_box_search_menu() {
 function bento_search_results_page() {
   $content = theme('bento_box_search_results');
   return $content;
+}
+
+/**
+ * Callback function for system query.
+ */
+function bento_search_query_result($nid, $keywords) {
+  $results_html = _process_system_query($nid, $keywords);
+  print $results_html;
+  drupal_exit();
 }
 
 /**
@@ -169,4 +188,72 @@ function _search_source_list() {
     ->execute();
   
   return $query;
+}
+
+/**
+ * Returns the processed html from a queried system.
+ *
+ * @nid
+ *   the nid for the Search Source node
+ * 
+ * @keywords
+ *   the keywords to use when querying the system
+ * 
+ * @return
+ *   A result set object containing the list of search sources.
+ */
+function _process_system_query($nid, $keywords) {
+  //get the search source node object
+  $search_source = node_load($nid);
+  //get the fields attached to the node
+  $search_source_url_field = $search_source->search_source_url;
+  $results_container_field = $search_source->results_container;
+  $single_result_field = $search_source->single_result;
+  //retrieve the values given by the user
+  $clean_source_url = $search_source_url_field['und'][0]['value'];
+  $results_container = $results_container_field['und'][0]['value'];
+  $single_result = $single_result_field['und'][0]['value'];
+  //replace the keywords from the search into the search url
+  $processed_source_url = str_replace('[keywords]', $keywords, $clean_source_url);
+
+  //call the html parsing function
+  $processed_html = _bento_search_html_parser($processed_source_url, 
+    $results_container, $single_result);
+
+  return $processed_html;
+}
+
+/**
+ * Retrieves a url and parses it according to the parameters given.
+ *
+ * @source_url
+ *   the url for the system to be queried
+ * 
+ * @results_container
+ *   the ID or Class of the element surrounding the results
+ * 
+ * @single_result
+ *   The ID or Class of a single result element
+ */
+function _bento_search_html_parser($source_url, $results_container, $single_result) {
+  $processed_html = 'something';
+  //retrieve the raw html
+  $raw_html = file_get_contents($source_url);
+  
+  $dom = new domDocument;
+  $dom->loadHTML($raw_html); //load the html into an object 
+  $dom->preserveWhiteSpace = false; //discard white space
+  
+  //get the html in the container specified if it is surrounded by a class
+  if($results_container[0] == '.') {
+    $xpath = new DOMXPath($dom);
+    $classname = substr($results_container, 1);
+    $xpath_results = $xpath->query("//*[contains(@class, '$classname')]");
+    
+    foreach($xpath_results as $xpath_result) {
+      $processed_html .= $dom->saveXML($xpath_result);
+    }
+  }
+   
+  return $processed_html;
 }
