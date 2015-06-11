@@ -69,14 +69,17 @@ function template_preprocess_bento_box_search_form(&$variables) {
  * Preprocess variables to be passed to the results page template assigned above in hook_theme().
  */
 function template_preprocess_bento_box_search_results(&$variables) {
+  global $base_url;
   drupal_add_js(drupal_get_path('module', 'bento_box_search') . '/js/bento_box_search.js');
   $variables['search_input'] = $_SESSION['bento_search']['search_input'];
   $result = _search_source_list();
   
   foreach ($result as $search_source) {
     $variables['search_sources'][] = $search_source;
+    //replace the keywords from the search into the search url
+    $bento_query_url = "/bento_search_query/" . $search_source->nid . "/" . $variables['search_input'];
     drupal_add_js(array('bento_box_search' => 
-      array($search_source->nid => $search_source->nid)), 'setting');
+      array($search_source->nid => $bento_query_url)), 'setting');
   }
 }
 
@@ -206,21 +209,35 @@ function _process_system_query($nid, $keywords) {
   //get the search source node object
   $search_source = node_load($nid);
   //get the fields attached to the node
-  $search_source_url_field = $search_source->search_source_url;
   $results_container_field = $search_source->results_container;
   $single_result_field = $search_source->single_result;
   //retrieve the values given by the user
-  $clean_source_url = $search_source_url_field['und'][0]['value'];
   $results_container = $results_container_field['und'][0]['value'];
   $single_result = $single_result_field['und'][0]['value'];
   //replace the keywords from the search into the search url
-  $processed_source_url = str_replace('[keywords]', $keywords, $clean_source_url);
+  $processed_source_url = _url_replace_keywords($nid, $keywords);
 
   //call the html parsing function
   $processed_html = _bento_search_html_parser($processed_source_url, 
     $results_container, $single_result);
 
   return $processed_html;
+}
+
+/**
+ * Retrieves the Search Source node and replaces 
+ * the [keywords] section of the search_source_url with the @keywords argument
+ *
+ */
+function _url_replace_keywords($nid, $keywords) {
+  //get the search source node object
+  $search_source = node_load($nid);
+  $search_source_url_field = $search_source->search_source_url;
+  $clean_source_url = $search_source_url_field['und'][0]['value'];
+  //replace the keywords from the search into the search url
+  $processed_source_url = str_replace('[keywords]', $keywords, $clean_source_url);
+
+  return $processed_source_url;
 }
 
 /**
@@ -236,7 +253,7 @@ function _process_system_query($nid, $keywords) {
  *   The ID or Class of a single result element
  */
 function _bento_search_html_parser($source_url, $results_container, $single_result) {
-  $processed_html = 'something';
+  $processed_html = '';
   //retrieve the raw html
   $raw_html = file_get_contents($source_url);
   
@@ -254,6 +271,14 @@ function _bento_search_html_parser($source_url, $results_container, $single_resu
       $processed_html .= $dom->saveXML($xpath_result);
     }
   }
-   
+  
+  //get the html in the container specified if it is surrounded by a class
+  if($results_container[0] == '#') {
+    $xpath = new DOMXPath($dom);
+    $idname = substr($results_container, 1);
+    $container_html = $dom->getElementById($idname);
+    $processed_html .= $dom->saveXML($container_html);
+  }
+  
   return $processed_html;
 }

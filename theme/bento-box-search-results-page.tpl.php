@@ -12,5 +12,5 @@ returned the following results:</p>
 
 <?php foreach($search_sources as $search_source): ?>
 <h4>From <?php print $search_source->title; ?></h4>
-<div id="<?php print $search_source->nid; ?>">results</div>
+<div id="<?php print $search_source->nid; ?>"></div>
 <?php endforeach; ?>
