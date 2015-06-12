@@ -2,3 +2,12 @@
 
 .form-item-bento-search-input, #edit-bento-submit { display: inline-block; }
 #edit-bento-search-input { width: 150px; display: inline-block; }
+.bento-search-system-container {
+  float: left; 
+  width: 45%; 
+  border: 1px solid black;
+  min-width: 320px;
+  min-height: 100px;
+  padding: 15px;
+  margin: 0 15px 15px 0;
+}
