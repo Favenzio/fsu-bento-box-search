@@ -16,6 +16,7 @@ require_once drupal_get_path('module', 'bento_box_search') . '/includes/html_par
 
 //TODO: Make this configurable by user
 define('MAX_RESULT_COUNT', 10);
+define('ZERO_RESULT_MESSAGE', '<p>Your search returned 0 results.</p>');
 
 /**
  * Implements hook_block_info(). It lets Drupal know what blocks we want to create.

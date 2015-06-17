@@ -22,15 +22,19 @@ function _process_system_query($nid, $keywords) {
   //get the fields attached to the node
   $results_container_field = $search_source->results_container;
   $single_result_field = $search_source->single_result;
+  $element_replace_field = $search_source->element_replace;
+  $element_suppress_field = $search_source->element_suppress;
   //retrieve the values given by the user
   $results_container = $results_container_field['und'][0]['value'];
   $single_result = $single_result_field['und'][0]['value'];
+  $elements_to_replace = $element_replace_field['und'][0]['value'];
+  $elements_to_suppress = $element_suppress_field['und'][0]['value'];
   //replace the keywords from the search into the search url
   $processed_source_url = _url_replace_keywords($nid, $keywords);
 
   //call the html parsing function
   $processed_html = _bento_search_html_parser($processed_source_url, 
-    $results_container, $single_result);
+    $results_container, $single_result, $elements_to_replace, $elements_to_suppress);
 
   return $processed_html;
 }
@@ -62,25 +66,37 @@ function _url_replace_keywords($nid, $keywords) {
  * 
  * @single_result
  *   The ID or Class of a single result element
+ * 
+ * @elements_to_replace
+ *   XML elements that need to be replaced for display
  */
-function _bento_search_html_parser($source_url, $results_container, $single_result) {
+function _bento_search_html_parser($source_url, $results_container, $single_result, 
+                                   $elements_to_replace, $elements_to_suppress) {
   $processed_html = '';
   $raw_html = file_get_contents($source_url);  
   $dom = new domDocument;
   $dom->loadHTML($raw_html); //load the html into an object 
   $dom->preserveWhiteSpace = false; //discard white space
   
+  $suppressed_dom = _suppress_elements($dom, $elements_to_suppress);
+  $replaced_dom = _replace_elements($suppressed_dom, $elements_to_replace);
+  
   //get the html in the container specified if it is surrounded by a class
   if($results_container[0] == '.') {
-    $results_array = _get_html_by_class($dom, $results_container);
+    $results_array = _get_html_by_class($replaced_dom, $results_container);
     foreach ($results_array as $result) {
       $processed_html .= $result;
     }
   }
-  
   //get the html in the container specified if it is surrounded by an id
-  if($results_container[0] == '#') {
-    $results_array = _get_html_by_id($dom, $results_container);
+  elseif($results_container[0] == '#') {
+    $results_array = _get_html_by_id($replaced_dom, $results_container);
+    for ($x = 0; $x < MAX_RESULT_COUNT; $x++) {
+      $processed_html .= $results_array[$x];
+    }
+  }
+  else {
+    $results_array = _get_html_by_element($replaced_dom, $results_container);
     for ($x = 0; $x < MAX_RESULT_COUNT; $x++) {
       $processed_html .= $results_array[$x];
     }
@@ -103,9 +119,13 @@ function _parse_single_results($html, $single_result_marker) {
   $dom->preserveWhiteSpace = false; //discard white space
   
   //remove the class and id attributes from the container
-  $dom->documentElement->removeAttribute('class');
-  $dom->documentElement->removeAttribute('id');
-  
+  if(isset($dom->documentElement)) {
+    $dom->documentElement->removeAttribute('class');
+    $dom->documentElement->removeAttribute('id');
+  }
+  else {
+    return ZERO_RESULT_MESSAGE;
+  }
   //get the html in the single result specified if it is surrounded by a class
   if($single_result_marker[0] == '.') {
     $results_array = _get_html_by_class($dom, $single_result_marker);
@@ -131,7 +151,7 @@ function _parse_single_results($html, $single_result_marker) {
 }
 
 /**
- * Returns an array of HTML snippets found using 
+ * Returns an array of XML snippets found using 
  * the element specified by the @class argument
  */
 function _get_html_by_class ($dom, $class) {
@@ -149,7 +169,7 @@ function _get_html_by_class ($dom, $class) {
 }
 
 /**
- * Returns an array of HTML snippets found using 
+ * Returns an array of XML snippets found using 
  * the element specified by the @id argument
  */
 function _get_html_by_id ($dom, $id) {
@@ -167,7 +187,7 @@ function _get_html_by_id ($dom, $id) {
 }
 
 /**
- * Returns an array of HTML snippets found using 
+ * Returns an array of XML snippets found using 
  * the element specified by the @element argument
  */
 function _get_html_by_element ($dom, $element) {
@@ -200,4 +220,68 @@ function _change_relative_to_absolute_url($relative_html, $source_url) {
     $full_url, $relative_html);
   
   return $absolute_html;
+}
+
+/**
+ * 
+ * @param $dom - DOM of the XML file to search for elements
+ * @param $elements_to_replace - the elements to match and replace
+ */
+function _replace_elements($dom, $elements_to_replace) {
+  $replace_key_pairs = explode(PHP_EOL, $elements_to_replace);
+
+  foreach ($replace_key_pairs as $replace_key_pair) {
+
+    $replace = explode('=', $replace_key_pair);
+    
+    if (isset($replace[0]) && isset($replace[1])) {
+      $old_tag = trim($replace[0]);
+      $new_tag = trim($replace[1]);
+      $nodes = $dom->getElementsByTagName($old_tag);
+      $toRemove = array();
+      foreach ($nodes as $node) {
+        $newNode = $dom->createElement($new_tag);
+        foreach ($node->attributes as $attribute) {
+          $newNode->setAttribute($attribute->name, $attribute->value);
+        }
+
+        foreach ($node->childNodes as $child) {
+          $newNode->appendChild($node->removeChild($child));
+        }
+
+        $node->parentNode->appendChild($newNode);
+        $toRemove[] = $node;
+      }
+
+      foreach ($toRemove as $node) {
+        $node->parentNode->removeChild($node);
+      }
+    }
+  }
+
+  return $dom;
+}
+
+/**
+ * 
+ * @param $dom - DOM of the XML file to search for elements
+ * @param $elements_to_suppress - the elements to suppress
+ */
+function _suppress_elements($dom, $elements_to_suppress) {
+  $elements_array = explode(',', $elements_to_suppress);
+  $nodes_to_remove = array();
+  foreach ($elements_array as $element_to_suppress) { 
+    $nodes = $dom->getElementsByTagName(trim($element_to_suppress));
+    foreach ($nodes as $node) {
+      $nodes_to_remove[] = $node;
+    }
+  }
+  
+  foreach ($nodes_to_remove as $node_to_remove) {
+    if(isset($node_to_remove->parentNode)) {
+     $node_to_remove->parentNode->removeChild($node_to_remove);
+    }
+  }
+
+  return $dom;
 }

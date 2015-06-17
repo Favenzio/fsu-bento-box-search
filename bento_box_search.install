@@ -39,23 +39,65 @@ function bento_box_search_uninstall() {
  */
 function _bento_box_search_installed_fields() {
   $t = get_t();
-  return array(
-    'search_source_url' => array (
-      'field_name' => 'search_source_url',
-      'label' => $t('Search URL for the source you wish to query'),
-      'type' => 'text',
+  $fields = array();
+  
+  $fields['search_source_url'] = array (
+    'field_name' => 'search_source_url',
+    'label' => $t('Search URL for the source you wish to query (use [keywords] to replace input).'),
+    'type' => 'text',
+  );
+  
+  $fields['results_container'] = array (
+    'field_name' => 'results_container',
+    'label' => $t('The ELEMENT, CLASS or ID for the container that surrounds the results'),
+    'type' => 'text',
+  );
+      
+  $fields['single_result'] = array (
+    'field_name' => 'single_result',
+    'label' => $t('The ELEMENT, CLASS or ID for a single result'),
+    'type' => 'text',
+  );
+    
+  $fields['element_replace'] = array (
+    'field_name' => 'element_replace',
+    'label' => $t('Key Pair values for elements you wish to replace, one per line. (i.e. title=H1)'),
+    'type' => 'text_long',
+    'foreign_keys' => array(
+      'format' => array(
+        'columns' => array(
+          'format' => 'format',
+        ),
+        'table' => 'filter_format',
+      ),
     ),
-    'results_container' => array (
-      'field_name' => 'results_container',
-      'label' => $t('The ID or CLASS for the container that surrounds the results'),
-      'type' => 'text',
-    ),
-      'single_result' => array (
-      'field_name' => 'single_result',
-      'label' => $t('The ID or CLASS for a single result'),
-      'type' => 'text',
+    'indexes' => array(
+      'format' => array(
+        0 => 'format',
+      ),
     ),
   );
+  
+  $fields['element_suppress'] = array (
+    'field_name' => 'element_suppress',
+    'label' => $t('Elements you wish to suppress for display. (separate using commas)'),
+    'type' => 'text_long',
+    'foreign_keys' => array(
+      'format' => array(
+        'columns' => array(
+          'format' => 'format',
+        ),
+        'table' => 'filter_format',
+      ),
+    ),
+    'indexes' => array(
+      'format' => array(
+        0 => 'format',
+      ),
+    ),
+  );
+  
+  return $fields;
 }
 
 /**
@@ -63,50 +105,121 @@ function _bento_box_search_installed_fields() {
  */
 function _bento_box_search_installed_instances() {
   $t = get_t();
-  return array(
-    'search_source_url' => array(
-      'field_name' => 'search_source_url',
-      'type' => 'text',
-      'label' => $t('Search URL for the source you wish to query'),
-      'widget'=> array(
-        'type' => 'text_textfield'
-      ),
-      'display' => array(
-        'bento_box_search_field' => array(
-          'label' => $t('Search URL for the source you wish to query'),
-          'type' => 'text'
-        )
-      )
+  $instances = array();
+  
+  $instances['search_source_url'] = array(
+    'field_name' => 'search_source_url',
+    'type' => 'text',
+    'label' => $t('Search URL for the source you wish to query (use [keywords] to replace input).'),
+    'widget'=> array(
+      'type' => 'text_textfield',
+      'weight' => '-3',
     ),
-    'results_container' => array(
-      'field_name' => 'results_container',
-      'type' => 'text',
-      'label' => $t('The ID or CLASS for the container that surrounds the results'),
-      'widget'=> array(
-        'type' => 'text_textfield'
+    'display' => array(
+      'bento_box_search_field' => array(
+        'label' => $t('Search URL for the source you wish to query (use [keywords] to replace input).'),
+        'type' => 'text',
       ),
-      'display' => array(
-        'bento_box_results_container' => array(
-          'label' => $t('The ID or CLASS for the container that surrounds the results'),
-          'type' => 'text'
-        )
-      )
     ),
-    'single_result' => array(
-      'field_name' => 'single_result',
-      'type' => 'text',
-      'label' => $t('The ID or CLASS for a single result'),
-      'widget'=> array(
-        'type' => 'text_textfield'
-      ),
-      'display' => array(
-        'bento_box_single_result' => array(
-          'label' => $t('The ID or CLASS for a single result'),
-          'type' => 'text'
-        )
-      )
-    ),   
   );
+    
+  $instances['results_container'] = array(
+    'field_name' => 'results_container',
+    'type' => 'text',
+    'label' => $t('The ELEMENT, CLASS or ID for the container that surrounds the results'),
+    'widget' => array(
+      'type' => 'text_textfield',
+      'weight' => '-2',
+    ),
+    'display' => array(
+      'bento_box_results_container' => array(
+        'label' => $t('The ELEMENT, CLASS or ID for the container that surrounds the results'),
+        'type' => 'text',
+      ),
+    ),
+  );
+
+  $instances['single_result'] = array(
+    'field_name' => 'single_result',
+    'type' => 'text',
+    'label' => $t('The ELEMENT, CLASS or ID for a single result'),
+    'widget' => array(
+      'type' => 'text_textfield',
+      'weight' => '-1',
+    ),
+    'display' => array(
+      'bento_box_single_result' => array(
+        'label' => $t('The ELEMENT, CLASS or ID for a single result'),
+        'type' => 'text',
+      ),
+    ),
+  );
+  
+  $instances['element_replace'] = array(
+    'field_name' => 'element_replace',
+    'type' => 'text_long',
+    'label' => t('Key Pair values for elements you wish to replace, one per line. (i.e. title=H1)'),
+    'widget' => array(
+      'settings' => array(
+        'rows' => '5',
+      ),
+      'type' => 'text_textarea',
+      'weight' => 1,
+    ),
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 0,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'required' => 0,
+    'settings' => array(
+      'text_processing' => '0',
+      'user_register_form' => FALSE,
+    ),
+  );
+  
+  $instances['element_supress'] = array(
+    'field_name' => 'element_suppress',
+    'type' => 'text_long',
+    'label' => t('Elements you wish to suppress for display. (separate using commas)'),
+    'widget' => array(
+      'settings' => array(
+        'rows' => '5',
+      ),
+      'type' => 'text_textarea',
+      'weight' => 2,
+    ),
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 0,
+      ),
+      'teaser' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'required' => 0,
+    'settings' => array(
+      'text_processing' => '0',
+      'user_register_form' => FALSE,
+    ),
+  );
+  
+  return $instances;
 }
 
 /**
