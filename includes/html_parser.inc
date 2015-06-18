@@ -116,7 +116,7 @@ function _bento_search_html_parser($source_url, $results_container, $single_resu
   $replaced_html = _replace_elements($relative_html, $elements_to_replace);
   $final_html = _change_relative_to_absolute_url($replaced_html, $source_url);
   
-  return $replaced_html;
+  return $final_html;
 }
 
 /**
@@ -309,24 +309,15 @@ function _replace_elements($html, $elements_to_replace) {
 function _suppress_elements(DOMNode $xpath_result, $elements_to_suppress) {
   $elements_array = explode(',', $elements_to_suppress);
   $child_nodes = $xpath_result->childNodes;
-  $nodes_to_remove = array();
   
-  foreach ($elements_array as $element_to_suppress) {
-    $count = 0;
-    
+  foreach ($elements_array as $element_to_suppress) {  
     foreach($child_nodes as $child_node) {
       if ($child_node->nodeType == 1 && $child_node->nodeName == trim($element_to_suppress)) {
-        $nodes_to_remove[] = $count;
+        $xpath_result->removeChild($child_node);
       }
-      
-      $count++;
     }
   }
-  
-  foreach ($nodes_to_remove as $node_to_remove) {
-    $xpath_result->removeChild($xpath_result->childNodes->item($node_to_remove));
-  }
-
+ 
   return $xpath_result;
 }
 
