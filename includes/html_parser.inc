@@ -147,20 +147,20 @@ function _parse_single_results($html, $single_result_marker, $link_element, $sea
   if($single_result_marker[0] == '.') {
     $results_array = _get_html_by_class($dom, $single_result_marker, TRUE, $link_element, $elements_to_suppress);
     for ($x = 0; $x < MAX_RESULT_COUNT and $x < count($results_array); $x++) {
-      $processed_html .= $results_array[$x];
+      $processed_html .= '<div class="bento-single-result">' . $results_array[$x] . '</div>';
     }
   }
   //get the html in the single result specified if it is surrounded by an id
   elseif($single_result_marker[0] == '#') {
     $results_array = _get_html_by_id($dom, $single_result_marker, TRUE, $link_element, $elements_to_suppress);
     for ($x = 0; $x < MAX_RESULT_COUNT and $x < count($results_array); $x++) {
-      $processed_html .= $results_array[$x];
+      $processed_html .= '<div class="bento-single-result">' . $results_array[$x] . '</div>';
     }
   } 
   else {
     $results_array = _get_html_by_element($dom, $single_result_marker, TRUE, $link_element, $elements_to_suppress);
     for ($x = 0; $x < MAX_RESULT_COUNT and $x < count($results_array); $x++) {
-      $processed_html .= $results_array[$x];
+      $processed_html .= '<div class="bento-single-result">' . $results_array[$x] . '</div>';
     }
   }
   
