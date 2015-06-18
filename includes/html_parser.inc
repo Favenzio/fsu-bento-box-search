@@ -24,17 +24,23 @@ function _process_system_query($nid, $keywords) {
   $single_result_field = $search_source->single_result;
   $element_replace_field = $search_source->element_replace;
   $element_suppress_field = $search_source->element_suppress;
+  $link_element_field = $search_source->link_element;
+  $search_source_format_field = $search_source->search_source_format;
+  
   //retrieve the values given by the user
   $results_container = $results_container_field['und'][0]['value'];
   $single_result = $single_result_field['und'][0]['value'];
   $elements_to_replace = $element_replace_field['und'][0]['value'];
   $elements_to_suppress = $element_suppress_field['und'][0]['value'];
+  $link_element = $link_element_field['und'][0]['value'];
+  $search_source_format = $search_source_format_field['und'][0]['value'];
+  
   //replace the keywords from the search into the search url
   $processed_source_url = _url_replace_keywords($nid, $keywords);
 
   //call the html parsing function
-  $processed_html = _bento_search_html_parser($processed_source_url, 
-    $results_container, $single_result, $elements_to_replace, $elements_to_suppress);
+  $processed_html = _bento_search_html_parser($processed_source_url, $results_container, 
+    $single_result, $link_element, $elements_to_replace, $elements_to_suppress, $search_source_format);
 
   return $processed_html;
 }
@@ -71,51 +77,62 @@ function _url_replace_keywords($nid, $keywords) {
  *   XML elements that need to be replaced for display
  */
 function _bento_search_html_parser($source_url, $results_container, $single_result, 
-                                   $elements_to_replace, $elements_to_suppress) {
-  $processed_html = '';
-  $raw_html = file_get_contents($source_url);  
-  $dom = new domDocument;
-  $dom->loadHTML($raw_html); //load the html into an object 
-  $dom->preserveWhiteSpace = false; //discard white space
+  $link_element, $elements_to_replace, $elements_to_suppress, $search_source_format) {
   
-  $suppressed_dom = _suppress_elements($dom, $elements_to_suppress);
-  $replaced_dom = _replace_elements($suppressed_dom, $elements_to_replace);
+  $processed_html = '';
+  $raw_xml = file_get_contents($source_url);  
+  $dom = new domDocument;
+  
+  if($search_source_format) {
+    $dom->loadXML($raw_xml);
+  } else {
+    $dom->loadHTML($raw_xml);
+  }
+  $dom->preserveWhiteSpace = false; //discard white space
   
   //get the html in the container specified if it is surrounded by a class
   if($results_container[0] == '.') {
-    $results_array = _get_html_by_class($replaced_dom, $results_container);
+    $results_array = _get_html_by_class($dom, $results_container, FALSE);
     foreach ($results_array as $result) {
       $processed_html .= $result;
     }
   }
   //get the html in the container specified if it is surrounded by an id
   elseif($results_container[0] == '#') {
-    $results_array = _get_html_by_id($replaced_dom, $results_container);
-    for ($x = 0; $x < MAX_RESULT_COUNT; $x++) {
-      $processed_html .= $results_array[$x];
+    $results_array = _get_html_by_id($dom, $results_container, FALSE);
+    foreach ($results_array as $result) {
+      $processed_html .= $result;
     }
   }
   else {
-    $results_array = _get_html_by_element($replaced_dom, $results_container);
-    for ($x = 0; $x < MAX_RESULT_COUNT; $x++) {
-      $processed_html .= $results_array[$x];
+    $results_array = _get_html_by_element($dom, $results_container, FALSE);
+    foreach ($results_array as $result) {
+      $processed_html .= $result;
     }
   }
   
-  $relative_html = _parse_single_results($processed_html, $single_result);
-  $final_html = _change_relative_to_absolute_url($relative_html, $source_url);
+  $relative_html = _parse_single_results($processed_html, $single_result, $link_element,
+    $search_source_format, $elements_to_suppress);
+  $replaced_html = _replace_elements($relative_html, $elements_to_replace);
+  $final_html = _change_relative_to_absolute_url($replaced_html, $source_url);
   
-  return $final_html;
+  return $replaced_html;
 }
 
 /**
  * Returns an array of individual results based on the ID or Class passed in
  * the @single_result_marker parameter.
  */
-function _parse_single_results($html, $single_result_marker) {
+function _parse_single_results($html, $single_result_marker, $link_element, $search_source_format, $elements_to_suppress) {
   $processed_html = '';
   $dom = new domDocument;
-  $dom->loadXML($html); //load the html into an object 
+  
+  if($search_source_format) {
+    $dom->loadXML($html);
+  } else {
+    $dom->loadHTML($html);
+  }
+  
   $dom->preserveWhiteSpace = false; //discard white space
   
   //remove the class and id attributes from the container
@@ -128,21 +145,21 @@ function _parse_single_results($html, $single_result_marker) {
   }
   //get the html in the single result specified if it is surrounded by a class
   if($single_result_marker[0] == '.') {
-    $results_array = _get_html_by_class($dom, $single_result_marker);
-    for ($x = 0; $x < MAX_RESULT_COUNT; $x++) {
+    $results_array = _get_html_by_class($dom, $single_result_marker, TRUE, $link_element, $elements_to_suppress);
+    for ($x = 0; $x < MAX_RESULT_COUNT and $x < count($results_array); $x++) {
       $processed_html .= $results_array[$x];
     }
   }
   //get the html in the single result specified if it is surrounded by an id
   elseif($single_result_marker[0] == '#') {
-    $results_array = _get_html_by_id($dom, $single_result_marker);
-    for ($x = 0; $x < MAX_RESULT_COUNT; $x++) {
+    $results_array = _get_html_by_id($dom, $single_result_marker, TRUE, $link_element, $elements_to_suppress);
+    for ($x = 0; $x < MAX_RESULT_COUNT and $x < count($results_array); $x++) {
       $processed_html .= $results_array[$x];
     }
   } 
   else {
-    $results_array = _get_html_by_element($dom, $single_result_marker);
-    for ($x = 0; $x < MAX_RESULT_COUNT; $x++) {
+    $results_array = _get_html_by_element($dom, $single_result_marker, TRUE, $link_element, $elements_to_suppress);
+    for ($x = 0; $x < MAX_RESULT_COUNT and $x < count($results_array); $x++) {
       $processed_html .= $results_array[$x];
     }
   }
@@ -154,7 +171,7 @@ function _parse_single_results($html, $single_result_marker) {
  * Returns an array of XML snippets found using 
  * the element specified by the @class argument
  */
-function _get_html_by_class ($dom, $class) {
+function _get_html_by_class ($dom, $class, $individual_result, $link_element = '', $elements_to_suppress = '') {
   $html_results = array();
   $xpath = new DOMXPath($dom);
   $classname = substr($class, 1);
@@ -162,6 +179,12 @@ function _get_html_by_class ($dom, $class) {
     $xpath->query("//*[contains(@class,'$classname')]");
     
   foreach($xpath_results as $xpath_result) {
+    
+    if($individual_result) {
+      $xpath_result = _add_href_to_first_element($xpath_result, $link_element);
+      $xpath_result = _suppress_elements($xpath_result, $elements_to_suppress);
+    }
+    
     $html_results[] = $dom->saveXML($xpath_result);
   }
   
@@ -172,7 +195,7 @@ function _get_html_by_class ($dom, $class) {
  * Returns an array of XML snippets found using 
  * the element specified by the @id argument
  */
-function _get_html_by_id ($dom, $id) {
+function _get_html_by_id ($dom, $id, $individual_result, $link_element = '', $elements_to_suppress = '') {
   $html_results = array();
   $xpath = new DOMXPath($dom);
   $idname = substr($id, 1);
@@ -180,6 +203,12 @@ function _get_html_by_id ($dom, $id) {
     $xpath->query("//*[contains(@id,'$idname')]");
     
   foreach($xpath_results as $xpath_result) {
+    
+    if($individual_result) {
+     $xpath_result = _add_href_to_first_element($xpath_result, $link_element);
+     $xpath_result = _suppress_elements($xpath_result, $elements_to_suppress);
+    }
+    
     $html_results[] = $dom->saveXML($xpath_result);
   }
   
@@ -190,13 +219,19 @@ function _get_html_by_id ($dom, $id) {
  * Returns an array of XML snippets found using 
  * the element specified by the @element argument
  */
-function _get_html_by_element ($dom, $element) {
+function _get_html_by_element ($dom, $element, $individual_result, $link_element = '', $elements_to_suppress = '') {
   $html_results = array();
   $xpath = new DOMXPath($dom);
   $xpath_query = "//" . $element;
   $xpath_results = $xpath->query($xpath_query);
     
   foreach($xpath_results as $xpath_result) {
+    
+    if($individual_result) {
+      $xpath_result = _add_href_to_first_element($xpath_result, $link_element);
+      $xpath_result = _suppress_elements($xpath_result, $elements_to_suppress);
+    }
+    
     $html_results[] = $dom->saveXML($xpath_result);
   }
   
@@ -227,7 +262,11 @@ function _change_relative_to_absolute_url($relative_html, $source_url) {
  * @param $dom - DOM of the XML file to search for elements
  * @param $elements_to_replace - the elements to match and replace
  */
-function _replace_elements($dom, $elements_to_replace) {
+function _replace_elements($html, $elements_to_replace) {
+  $dom = new domDocument;
+  $dom->loadHTML($html); //load the html into an object 
+  $dom->preserveWhiteSpace = false; //discard white space
+  
   $replace_key_pairs = explode(PHP_EOL, $elements_to_replace);
 
   foreach ($replace_key_pairs as $replace_key_pair) {
@@ -259,7 +298,7 @@ function _replace_elements($dom, $elements_to_replace) {
     }
   }
 
-  return $dom;
+  return $dom->saveXML();
 }
 
 /**
@@ -267,21 +306,65 @@ function _replace_elements($dom, $elements_to_replace) {
  * @param $dom - DOM of the XML file to search for elements
  * @param $elements_to_suppress - the elements to suppress
  */
-function _suppress_elements($dom, $elements_to_suppress) {
+function _suppress_elements(DOMNode $xpath_result, $elements_to_suppress) {
   $elements_array = explode(',', $elements_to_suppress);
+  $child_nodes = $xpath_result->childNodes;
   $nodes_to_remove = array();
-  foreach ($elements_array as $element_to_suppress) { 
-    $nodes = $dom->getElementsByTagName(trim($element_to_suppress));
-    foreach ($nodes as $node) {
-      $nodes_to_remove[] = $node;
+  
+  foreach ($elements_array as $element_to_suppress) {
+    $count = 0;
+    
+    foreach($child_nodes as $child_node) {
+      if ($child_node->nodeType == 1 && $child_node->nodeName == trim($element_to_suppress)) {
+        $nodes_to_remove[] = $count;
+      }
+      
+      $count++;
     }
   }
   
   foreach ($nodes_to_remove as $node_to_remove) {
-    if(isset($node_to_remove->parentNode)) {
-     $node_to_remove->parentNode->removeChild($node_to_remove);
-    }
+    $xpath_result->removeChild($xpath_result->childNodes->item($node_to_remove));
   }
 
-  return $dom;
+  return $xpath_result;
+}
+
+/**
+ * 
+ * @param DOMNode $xpath_result
+ * @param type $link_element
+ * @return DOMNode
+ */
+function _add_href_to_first_element(DOMNode $xpath_result, $link_element) {
+  $child_nodes = $xpath_result->childNodes;
+  $link_found = false;
+  
+  foreach($child_nodes as $child_node) {
+    if ($child_node->nodeType == 1 && $child_node->nodeName == trim($link_element)) {
+      $link_found = $child_node->nodeValue;
+    }
+  }
+  
+  $index = NULL;
+  
+  //get the index of the first element
+  if ($link_found) {
+    $count = 0;
+    $first_element_found = false;
+    
+    foreach($child_nodes as $child_node) {
+      if ($child_node->nodeType == 1 && !$first_element_found) {
+        $index = $count;
+        $first_element_found = true;
+      }   
+      $count++;    
+    }    
+  }
+  
+  if($index){
+    $xpath_result->childNodes->item($index)->setAttribute("href", (string)$link_found);
+  }
+  
+  return $xpath_result;
 }

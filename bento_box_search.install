@@ -47,6 +47,22 @@ function _bento_box_search_installed_fields() {
     'type' => 'text',
   );
   
+  $fields['search_source_format'] = array (
+    'field_name' => 'search_source_format',
+    'cardinality' => 1,
+    'label' => $t('Are the results coming back as XML? (leave blank for HTML).'),
+    'type' => 'list_boolean',
+    'widget' => array(
+      'type' => 'options_onoff',
+    ),
+    'settings' => array(
+      'allowed_values' => array(
+        '0' => 'No',
+        '1' => 'Yes',
+      ),
+    ),
+  );
+  
   $fields['results_container'] = array (
     'field_name' => 'results_container',
     'label' => $t('The ELEMENT, CLASS or ID for the container that surrounds the results'),
@@ -56,6 +72,12 @@ function _bento_box_search_installed_fields() {
   $fields['single_result'] = array (
     'field_name' => 'single_result',
     'label' => $t('The ELEMENT, CLASS or ID for a single result'),
+    'type' => 'text',
+  );
+  
+  $fields['link_element'] = array (
+    'field_name' => 'link_element',
+    'label' => $t('The ELEMENT that contains a link to the result.'),
     'type' => 'text',
   );
     
@@ -113,12 +135,29 @@ function _bento_box_search_installed_instances() {
     'label' => $t('Search URL for the source you wish to query (use [keywords] to replace input).'),
     'widget'=> array(
       'type' => 'text_textfield',
-      'weight' => '-3',
+      'weight' => '-4',
     ),
     'display' => array(
       'bento_box_search_field' => array(
         'label' => $t('Search URL for the source you wish to query (use [keywords] to replace input).'),
         'type' => 'text',
+      ),
+    ),
+  );
+  
+  $instances['search_source_format'] = array (
+    'field_name' => 'search_source_format',
+    'cardinality' => 1,
+    'label' => $t('Are the results coming back as XML? (leave blank for HTML).'),
+    'type' => 'list_boolean',
+    'widget' => array(
+      'type' => 'options_onoff',
+      'weight' => '-3',
+    ),
+    'settings' => array(
+      'allowed_values' => array(
+        '0' => 'No',
+        '1' => 'Yes',
       ),
     ),
   );
@@ -150,6 +189,22 @@ function _bento_box_search_installed_instances() {
     'display' => array(
       'bento_box_single_result' => array(
         'label' => $t('The ELEMENT, CLASS or ID for a single result'),
+        'type' => 'text',
+      ),
+    ),
+  );
+  
+  $instances['link_element'] = array(
+    'field_name' => 'link_element',
+    'type' => 'text',
+    'label' => $t('The ELEMENT that contains a link to the result.'),
+    'widget' => array(
+      'type' => 'text_textfield',
+      'weight' => '0',
+    ),
+    'display' => array(
+      'bento_box_single_result' => array(
+        'label' => $t('The ELEMENT that contains a link to the result.'),
         'type' => 'text',
       ),
     ),
