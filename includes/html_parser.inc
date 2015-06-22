@@ -57,8 +57,9 @@ function _url_replace_keywords($nid, $keywords) {
   $clean_source_url = $search_source_url_field['und'][0]['value'];
   //replace the keywords from the search into the search url
   $processed_source_url = str_replace('[keywords]', $keywords, $clean_source_url);
+  $final_source_url = str_replace(' ', '%20', trim($processed_source_url));
 
-  return $processed_source_url;
+  return $final_source_url;
 }
 
 /**
@@ -248,7 +249,7 @@ function _get_html_by_element ($dom, $element, $individual_result, $link_element
 function _change_relative_to_absolute_url($relative_html, $source_url) {
   $parsed_url = parse_url($source_url);
   $base_url = $parsed_url['scheme']."://".$parsed_url['host'];
-  $full_url = '$1' . $base_url . $parsed_url['path'] . '$2$3';
+  $full_url = '$1' . $base_url . '$2$3';
   
   $absolute_html = 
     preg_replace("#(<\s*a\s+[^>]*href\s*=\s*[\"'])(?!http)([^\"'>]+)([\"'>]+)#", 

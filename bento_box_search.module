@@ -15,7 +15,7 @@
 require_once drupal_get_path('module', 'bento_box_search') . '/includes/html_parser.inc';
 
 //TODO: Make this configurable by user
-define('MAX_RESULT_COUNT', 10);
+define('MAX_RESULT_COUNT', 5);
 define('ZERO_RESULT_MESSAGE', '<p>Your search returned 0 results.</p>');
 
 /**
