@@ -78,6 +78,7 @@ function template_preprocess_bento_box_search_results(&$variables) {
   drupal_add_js(drupal_get_path('module', 'bento_box_search') . '/js/bento_box_search.js');
   $variables['search_input'] = $_SESSION['bento_search']['search_input'];
   $result = _search_source_list();
+  $count = 0;
   
   foreach ($result as $search_source) {
     $variables['search_sources'][] = $search_source;
@@ -85,7 +86,11 @@ function template_preprocess_bento_box_search_results(&$variables) {
     $bento_query_url = $search_source->nid . "|" . $variables['search_input'];
     drupal_add_js(array('bento_box_search' => 
       array($search_source->nid => $bento_query_url)), 'setting');
+    $count++;
   }
+  
+  $variables['ss_count'] = $count;
+  $variables['ss_half_round'] = round($count/2);
 }
 
 /**

@@ -81,7 +81,7 @@ function _bento_search_html_parser($source_url, $results_container, $single_resu
   $link_element, $elements_to_replace, $elements_to_suppress, $search_source_format) {
   
   $processed_html = '';
-  $raw_xml = file_get_contents($source_url);  
+  $raw_xml = file_get_contents($source_url);
   $dom = new domDocument;
   
   if($search_source_format) {
@@ -299,7 +299,7 @@ function _replace_elements($html, $elements_to_replace) {
     }
   }
 
-  return $dom->saveXML();
+  return $dom->saveXML($dom->documentElement);
 }
 
 /**

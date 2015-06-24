@@ -11,9 +11,12 @@
      $.each(Drupal.settings.bento_box_search, function(index, id_keywords) {
        var temp_url = id_keywords.split("|"); 
        var bento_query_url = '/bento_search_query/' + temp_url[0] + '/' + temp_url[1];
+       $('#edit-bento-search-input').val(temp_url[1]);
        $.get(bento_query_url, function( results_html ) {
-         $( "#" + temp_url[0]).append('<div>' + results_html + '</div>');
+         $('#' + temp_url[0]).append('<div>' + results_html + '</div>');
+         $('#ajax-loader-' + temp_url[0]).empty();
        });
+    
      });
      // end our js code
    }

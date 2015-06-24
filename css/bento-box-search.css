@@ -3,14 +3,21 @@
 .form-item-bento-search-input, #edit-bento-submit { display: inline-block; }
 #edit-bento-search-input { width: 150px; display: inline-block; }
 .bento-search-system-container {
-  float: left; 
-  width: 45%; 
+  width: 100%;
   border: 1px solid black;
   min-width: 320px;
   min-height: 100px;
   padding: 15px;
   margin: 0 15px 15px 0;
 }
+.bento-search-system-container h4 { font-weight: bold; }
+.bento-search-system-container .ajax-loader { text-align: center; }
 
+#search-results-container-left { float: left; width: 46%; }
+#search-results-container-right { float: right; width: 46%; margin-right: 40px; }
 .bento-single-result { margin: 15px 0; }
 .bento-single-result p { margin: 0; padding: 0; } 
+.bento-single-result a, .bento-single-result h1, .bento-single-result h2, 
+.bento-single-result h3, .bento-single-result h4, .bento-single-result h5, 
+.bento-single-result h6 { font-size: 110%; font-weight: bold; text-decoration: none;}
+.bento-single-result li { margin: 15px 0 5px 0; }

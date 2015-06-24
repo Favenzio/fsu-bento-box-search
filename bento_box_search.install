@@ -119,6 +119,12 @@ function _bento_box_search_installed_fields() {
     ),
   );
   
+  $fields['more_results_url'] = array (
+    'field_name' => 'more_results_url',
+    'label' => $t('The URL to use to display more search results (use [keywords] to replace input).'),
+    'type' => 'text',
+  );
+  
   return $fields;
 }
 
@@ -271,6 +277,22 @@ function _bento_box_search_installed_instances() {
     'settings' => array(
       'text_processing' => '0',
       'user_register_form' => FALSE,
+    ),
+  );
+  
+  $instances['more_results_url'] = array(
+    'field_name' => 'more_results_url',
+    'type' => 'text',
+    'label' => $t('The URL to use to display more results (use [keywords] to replace input).'),
+    'widget'=> array(
+      'type' => 'text_textfield',
+      'weight' => '5',
+    ),
+    'display' => array(
+      'bento_box_search_field' => array(
+        'label' => $t('The URL to use to display more results (use [keywords] to replace input).'),
+        'type' => 'text',
+      ),
     ),
   );
   
