@@ -33,7 +33,7 @@ returned the following results:</p>
   <h4>From the <?php print $search_sources[$i]->title; ?></h4>
   <div id="ajax-loader-<?php print $search_sources[$i]->nid; ?>" class="ajax-loader">
       <img src="<?php print '/' . drupal_get_path('module', 'bento_box_search') . '/images/ajax-loader.gif' ?>">
-  </div>  
+  </div>
 </div>
 
 <?php endfor; ?>

@@ -26,6 +26,8 @@ function _process_system_query($nid, $keywords) {
   $element_suppress_field = $search_source->element_suppress;
   $link_element_field = $search_source->link_element;
   $search_source_format_field = $search_source->search_source_format;
+  $search_source_url_field = $search_source->search_source_url;
+  $more_results_url_field = $search_source->more_results_url;
   
   //retrieve the values given by the user
   $results_container = $results_container_field['und'][0]['value'];
@@ -34,32 +36,37 @@ function _process_system_query($nid, $keywords) {
   $elements_to_suppress = $element_suppress_field['und'][0]['value'];
   $link_element = $link_element_field['und'][0]['value'];
   $search_source_format = $search_source_format_field['und'][0]['value'];
+  $search_source_url = $search_source_url_field['und'][0]['value'];
+  $more_results_url = $more_results_url_field['und'][0]['value'];
   
   //replace the keywords from the search into the search url
-  $processed_source_url = _url_replace_keywords($nid, $keywords);
+  $processed_source_url = _url_replace_keywords($search_source_url, $keywords);
 
+  //retrieve the URL for more results
+  $processed_more_results_url = _url_replace_keywords($more_results_url, $keywords);
+  
   //call the html parsing function
   $processed_html = _bento_search_html_parser($processed_source_url, $results_container, 
     $single_result, $link_element, $elements_to_replace, $elements_to_suppress, $search_source_format);
 
-  return $processed_html;
+  $more_results_text = '<p id="more-results"><a href="' . $processed_more_results_url . 
+    '" target="_blank">See More Results...</a>';
+  
+  return $processed_html . $more_results_text;
 }
 
 /**
  * Retrieves the Search Source node and replaces 
- * the [keywords] section of the search_source_url with the @keywords argument
+ * the [keywords] section of the @url with the @keywords argument
  *
  */
-function _url_replace_keywords($nid, $keywords) {
-  //get the search source node object
-  $search_source = node_load($nid);
-  $search_source_url_field = $search_source->search_source_url;
-  $clean_source_url = $search_source_url_field['und'][0]['value'];
+function _url_replace_keywords($url, $keywords) {
+  
   //replace the keywords from the search into the search url
-  $processed_source_url = str_replace('[keywords]', $keywords, $clean_source_url);
-  $final_source_url = str_replace(' ', '%20', trim($processed_source_url));
+  $processed_url = str_replace('[keywords]', $keywords, $url);
+  $final_url = str_replace(' ', '%20', trim($processed_url));
 
-  return $final_source_url;
+  return $final_url;
 }
 
 /**
