@@ -47,6 +47,12 @@ function _bento_box_search_installed_fields() {
     'type' => 'text',
   );
   
+  $fields['search_source_backup_url'] = array (
+    'field_name' => 'search_source_backup_url',
+    'label' => $t('Search URL if main URL yields no results. (use [keywords] to replace input).'),
+    'type' => 'text',
+  );
+  
   $fields['search_source_format'] = array (
     'field_name' => 'search_source_format',
     'cardinality' => 1,
@@ -125,6 +131,28 @@ function _bento_box_search_installed_fields() {
     'type' => 'text',
   );
   
+  $fields['extract_profile'] = array (
+    'field_name' => 'extract_profile',
+    'cardinality' => 1,
+    'label' => $t('Extract a librarian profile from these results?'),
+    'type' => 'list_boolean',
+    'widget' => array(
+      'type' => 'options_onoff',
+    ),
+    'settings' => array(
+      'allowed_values' => array(
+        '0' => 'No',
+        '1' => 'Yes',
+      ),
+    ),
+  );
+  
+  $fields['profile_container'] = array (
+    'field_name' => 'profile_container',
+    'label' => $t('The ELEMENT, CLASS or ID for the container that surrounds the profile'),
+    'type' => 'text',
+  );
+  
   return $fields;
 }
 
@@ -141,7 +169,7 @@ function _bento_box_search_installed_instances() {
     'label' => $t('Search URL for the source you wish to query (use [keywords] to replace input).'),
     'widget'=> array(
       'type' => 'text_textfield',
-      'weight' => '-4',
+      'weight' => '-5',
     ),
     'display' => array(
       'bento_box_search_field' => array(
@@ -150,6 +178,22 @@ function _bento_box_search_installed_instances() {
       ),
     ),
   );
+  
+  $instances['search_source_backup_url'] = array(
+    'field_name' => 'search_source_backup_url',
+    'type' => 'text',
+    'label' => $t('Search URL if main URL yields no results. (use [keywords] to replace input).'),
+    'widget'=> array(
+      'type' => 'text_textfield',
+      'weight' => '-4',
+    ),
+    'display' => array(
+      'bento_box_search_field' => array(
+        'label' => $t('Search URL if main URL yields no results. (use [keywords] to replace input).'),
+        'type' => 'text',
+      ),
+    ),
+  );  
   
   $instances['search_source_format'] = array (
     'field_name' => 'search_source_format',
@@ -209,7 +253,7 @@ function _bento_box_search_installed_instances() {
       'weight' => '0',
     ),
     'display' => array(
-      'bento_box_single_result' => array(
+      'bento_box_link_element' => array(
         'label' => $t('The ELEMENT that contains a link to the result.'),
         'type' => 'text',
       ),
@@ -289,8 +333,41 @@ function _bento_box_search_installed_instances() {
       'weight' => '5',
     ),
     'display' => array(
-      'bento_box_search_field' => array(
+      'bento_box_more_results_url' => array(
         'label' => $t('The URL to use to display more results (use [keywords] to replace input).'),
+        'type' => 'text',
+      ),
+    ),
+  );
+  
+  $instances['extract_profile'] = array (
+    'field_name' => 'extract_profile',
+    'cardinality' => 1,
+    'label' => $t('Extract a librarian profile from these results?'),
+    'type' => 'list_boolean',
+    'widget' => array(
+      'type' => 'options_onoff',
+      'weight' => '6',
+    ),
+    'settings' => array(
+      'allowed_values' => array(
+        '0' => 'No',
+        '1' => 'Yes',
+      ),
+    ),
+  );
+  
+  $instances['profile_container'] = array(
+    'field_name' => 'profile_container',
+    'type' => 'text',
+    'label' => $t('The ELEMENT, CLASS or ID for the container that surrounds the profile'),
+    'widget' => array(
+      'type' => 'text_textfield',
+      'weight' => '7',
+    ),
+    'display' => array(
+      'bento_box_profile_container' => array(
+        'label' => $t('The ELEMENT, CLASS or ID for the container that surrounds the profile'),
         'type' => 'text',
       ),
     ),
