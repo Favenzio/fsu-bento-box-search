@@ -13,6 +13,7 @@
  */
 
 require_once drupal_get_path('module', 'bento_box_search') . '/includes/html_parser.inc';
+require_once drupal_get_path('module', 'bento_box_search') . '/includes/profile_extractor.inc';
 
 //TODO: Make this configurable by user
 define('MAX_RESULT_COUNT', 5);
@@ -27,6 +28,10 @@ function bento_box_search_block_info() {
     'info' => t('A search box with options for systems to be searched'),
     'cache' => DRUPAL_NO_CACHE,
   );
+  $blocks['bento_profile_block'] = array(
+    'info' => t('A block that displays a search related profile.'),
+    'cache' => DRUPAL_NO_CACHE,
+  ); 
      
   return $blocks;
 }
@@ -41,6 +46,15 @@ function bento_box_search_block_view($block_name = '') {
     
     $block = array(
       'content' => theme('bento_box_search_form'), //use hook_theme provided by this module.
+    );
+    
+    return $block;
+  }
+  
+  if ($block_name == 'bento_profile_block') {
+    
+    $block = array(
+      'content' => theme('bento_profile_block'), //use hook_theme provided by this module.
     );
     
     return $block;
@@ -60,6 +74,10 @@ function bento_box_search_theme() {
       'path' => drupal_get_path('module', 'bento_box_search').'/theme',
       'template' => 'bento-box-search-results-page', //see bento-box-search-results-page.tpl.php
     ),
+    'bento_profile_block' => array(
+      'path' => drupal_get_path('module', 'bento_box_search').'/theme',
+      'template' => 'bento-profile-block', //see bento-box-search-results-page.tpl.php
+    ),    
   );
 }
 
@@ -69,6 +87,27 @@ function bento_box_search_theme() {
 function template_preprocess_bento_box_search_form(&$variables) {
   $search_box = drupal_render (drupal_get_form('bento_search_form'));
   $variables['search_box'] = $search_box;
+}
+
+/**
+ * Preprocess variables to be passed to the profile block template assigned above in hook_theme().
+ */
+function template_preprocess_bento_profile_block(&$variables) {
+  $profile = 'No profile found.';
+  $search_sources = _search_source_list();
+  foreach ($search_sources as $search_source) {
+    
+    $node = node_load($search_source->nid);
+    
+    $extract_profile_field = $node->extract_profile;
+    $extract_profile = $extract_profile_field['und'][0]['value'];
+    
+    if($extract_profile) {
+      $profile = _extract_profile($search_source->nid, $_SESSION['bento_search']['search_input']);
+    }
+  }
+  
+  $variables['profile'] = $profile;
 }
 
 /**
