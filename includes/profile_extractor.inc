@@ -42,7 +42,10 @@ function _extract_profile($nid, $keywords) {
     }
   }
   
-  return 'Not Found';
+  return '<h4>Need Additional Help?</h4><p>We have subject specialists ready to assist. 
+    Use our <a href="http://askalibrarian.org/fsulibraries/" target="_blank">Virtual Reference Desk</a>
+    or <a href="form/consultation-request">schedule a consultation</a> with one of our 
+    <a href="scholars-commons/subject-specialists">Subject Specialists</a>.';
 }
 
 /**
