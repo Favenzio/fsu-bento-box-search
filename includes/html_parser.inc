@@ -89,6 +89,11 @@ function _bento_search_html_parser($source_url, $results_container, $single_resu
   
   $processed_html = '';
   $raw_xml = file_get_contents($source_url);
+  
+  if(!$raw_xml) {
+    $raw_xml = _curl($source_url);
+  }
+  
   $dom = new domDocument;
   
   if($search_source_format) {
@@ -124,7 +129,36 @@ function _bento_search_html_parser($source_url, $results_container, $single_resu
   $replaced_html = _replace_elements($relative_html, $elements_to_replace);
   $final_html = _change_relative_to_absolute_url($replaced_html, $source_url);
   
-  return $final_html;
+  return htmlspecialchars_decode($final_html);
+}
+
+function _curl($url) {
+  $parsed_url = parse_url($url);
+  $base_url = $parsed_url['scheme'] . '://' . $parsed_url['host'];
+       
+  $tmpfname = drupal_get_path('module', 'bento_box_search').'/tmp/cookie.txt';
+  
+  $ch = curl_init();
+  curl_setopt($ch, CURLOPT_URL, $base_url);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+  curl_setopt($ch, CURLOPT_USERAGENT, "User-Agent: Some-Agent/1.0");
+  curl_setopt($ch, CURLOPT_COOKIEJAR, $tmpfname);
+  curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+  curl_exec($ch);
+  curl_close($ch);
+  unset($ch);
+  
+  $ch = curl_init();
+  curl_setopt($ch, CURLOPT_URL, $url);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+  curl_setopt($ch, CURLOPT_USERAGENT, "User-Agent: Some-Agent/1.0");
+  curl_setopt($ch, CURLOPT_COOKIEFILE, $tmpfname);  
+  $data = curl_exec($ch);
+  curl_close($ch);
+  
+  unlink($tmpfname);
+  
+  return $data;
 }
 
 /**
