@@ -3,12 +3,14 @@
 .form-item-bento-search-input, #edit-bento-submit { display: inline-block; }
 #edit-bento-search-input { width: 150px; display: inline-block; }
 .bento-search-system-container {
-  width: 100%;
   border: 1px solid black;
-  min-width: 320px;
-  min-height: 100px;
+  width: 361px;
   padding: 15px;
-  margin: 0 15px 15px 0;
+  margin: 0 12px 12px 0;
+  display: inline-table;
+  height: 300px;
+  max-height: 300px;
+  overflow: auto;
 }
 .bento-search-system-container h4 { font-weight: bold; }
 .bento-search-system-container .ajax-loader { text-align: center; }
@@ -19,8 +21,7 @@
     margin-bottom: 0;
 }
 
-#search-results-container-left { float: left; width: 46%; }
-#search-results-container-right { float: right; width: 46%; margin-right: 40px; }
+#search-results-container { width: 100%; }
 .bento-single-result { margin: 15px 0; }
 .bento-single-result p { margin: 0; padding: 0; } 
 .bento-single-result a, .bento-single-result h1, .bento-single-result h2, 
