@@ -28,6 +28,7 @@ function _process_system_query($nid, $keywords) {
   $search_source_format_field = $search_source->search_source_format;
   $search_source_url_field = $search_source->search_source_url;
   $more_results_url_field = $search_source->more_results_url;
+  $encode_url_field = $search_source->encode_url;
   
   //retrieve the values given by the user
   $results_container = $results_container_field['und'][0]['value'];
@@ -38,18 +39,20 @@ function _process_system_query($nid, $keywords) {
   $search_source_format = $search_source_format_field['und'][0]['value'];
   $search_source_url = $search_source_url_field['und'][0]['value'];
   $more_results_url = $more_results_url_field['und'][0]['value'];
+  $encode_url = $encode_url_field['und'][0]['value'];  
   
   //replace the keywords from the search into the search url
-  $processed_source_url = _url_replace_keywords($search_source_url, $keywords);
+  $processed_source_url = _url_replace_keywords($search_source_url, $keywords, $encode_url);
 
   //retrieve the URL for more results
   $processed_more_results_url = _url_replace_keywords($more_results_url, $keywords);
   
   //call the html parsing function
   $processed_html = _bento_search_html_parser($processed_source_url, $results_container, 
-    $single_result, $link_element, $elements_to_replace, $elements_to_suppress, $search_source_format);
+    $single_result, $link_element, $elements_to_replace, $elements_to_suppress, 
+    $search_source_format);
 
-  $more_results_text = '<p id="more-results"><a href="' . $processed_more_results_url . 
+  $more_results_text = '<p class="more-results"><a href="' . $processed_more_results_url . 
     '" target="_blank">See More Results...</a>';
   
   return $processed_html . $more_results_text;
@@ -60,13 +63,18 @@ function _process_system_query($nid, $keywords) {
  * the [keywords] section of the @url with the @keywords argument
  *
  */
-function _url_replace_keywords($url, $keywords) {
+function _url_replace_keywords($url, $keywords, $encode_url) {
   
   //replace the keywords from the search into the search url
   $processed_url = str_replace('[keywords]', $keywords, $url);
   $final_url = str_replace(' ', '%20', trim($processed_url));
 
-  return $final_url;
+  if($encode_url) {
+    return $final_url;
+  }
+  else {
+    return $processed_url;
+  }
 }
 
 /**

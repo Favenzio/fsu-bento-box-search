@@ -47,6 +47,22 @@ function _bento_box_search_installed_fields() {
     'type' => 'text',
   );
   
+  $fields['encode_url'] = array (
+    'field_name' => 'encode_url',
+    'cardinality' => 1,
+    'label' => $t('Encode URL?'),
+    'type' => 'list_boolean',
+    'widget' => array(
+      'type' => 'options_onoff',
+    ),
+    'settings' => array(
+      'allowed_values' => array(
+        '0' => 'No',
+        '1' => 'Yes',
+      ),
+    ),
+  );
+  
   $fields['search_source_backup_url'] = array (
     'field_name' => 'search_source_backup_url',
     'label' => $t('Search URL if main URL yields no results. (use [keywords] to replace input).'),
@@ -169,12 +185,29 @@ function _bento_box_search_installed_instances() {
     'label' => $t('Search URL for the source you wish to query (use [keywords] to replace input).'),
     'widget'=> array(
       'type' => 'text_textfield',
-      'weight' => '-5',
+      'weight' => '-6',
     ),
     'display' => array(
       'bento_box_search_field' => array(
         'label' => $t('Search URL for the source you wish to query (use [keywords] to replace input).'),
         'type' => 'text',
+      ),
+    ),
+  );
+  
+  $instances['encode_url'] = array (
+    'field_name' => 'encode_url',
+    'cardinality' => 1,
+    'label' => $t('Encode URL?'),
+    'type' => 'list_boolean',
+    'widget' => array(
+      'type' => 'options_onoff',
+      'weight' => '-5',
+    ),
+    'settings' => array(
+      'allowed_values' => array(
+        '0' => 'No',
+        '1' => 'Yes',
       ),
     ),
   );

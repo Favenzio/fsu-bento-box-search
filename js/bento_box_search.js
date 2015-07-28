@@ -15,7 +15,7 @@
        $.get(bento_query_url, function( results_html ) {
          $('#' + temp_url[0]).append(results_html);
          $('#ajax-loader-' + temp_url[0]).empty();
-         $('.bento-search-system-container').height(300);
+         $('.bento-search-system-container').height(300).css({"overflow": "scroll"});
        });
     
      });
