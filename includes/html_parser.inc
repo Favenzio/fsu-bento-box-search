@@ -45,7 +45,7 @@ function _process_system_query($nid, $keywords) {
   $processed_source_url = _url_replace_keywords($search_source_url, $keywords, $encode_url);
 
   //retrieve the URL for more results
-  $processed_more_results_url = _url_replace_keywords($more_results_url, $keywords);
+  $processed_more_results_url = _url_replace_keywords($more_results_url, $keywords, $encode_url);
   
   //call the html parsing function
   $processed_html = _bento_search_html_parser($processed_source_url, $results_container, 
@@ -73,7 +73,8 @@ function _url_replace_keywords($url, $keywords, $encode_url) {
     return $final_url;
   }
   else {
-    return $processed_url;
+    $noencode_url = str_replace(' ', '+', trim($processed_url));
+    return $noencode_url;
   }
 }
 
